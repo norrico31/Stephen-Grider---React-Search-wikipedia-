@@ -4,7 +4,18 @@ import Result from './Result'
 
 export default () => {
     const [term, setTerm] = useState('tokyo ravens')
+    const [debouncedTerm, setDebouncedTerm] = useState(term)
     const [results, setResults] = useState([])
+
+    useEffect(() => {
+        const timerId = setTimeout(() => {
+            setDebouncedTerm(term)
+        }, 800)
+
+        return () => {
+            clearTimeout(timerId)
+        }
+    }, [term])
 
     useEffect(() => {
         const searchArticles = async () => {
@@ -14,28 +25,14 @@ export default () => {
                     list: 'search',
                     origin: '*',
                     format: 'json',
-                    srsearch: term
+                    srsearch: debouncedTerm
                 }
             })
             setResults(search)
         }
 
-        if (term && !results.length) {
-            searchArticles()
-        } else {
-            const timeoutId = setTimeout(() => {
-                if (term) {
-                    searchArticles()
-                }
-            }, 800)
-    
-            return () => {
-                clearTimeout(timeoutId)
-            }
-        }
-        
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [term])
+        searchArticles()
+    }, [debouncedTerm])
 
     const result = results.map(result => (
         <Result renderedResults={result} key={result.pageid} />
